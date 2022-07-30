@@ -12,7 +12,11 @@ buildscript {
         
 
     }
+    
 }
+
+
+
 
 allprojects {
     apply plugin: "eclipse"
@@ -20,12 +24,12 @@ allprojects {
     version = '1.0'
     ext {
         appName = "cells"
-        gdxVersion = '1.10.0'
+        gdxVersion = '1.11.0'
         roboVMVersion = '2.3.16'
         box2DLightsVersion = '1.5'
         ashleyVersion = '1.7.4'
         aiVersion = '1.8.2'
-        gdxControllersVersion = '2.2.1'
+        gdxControllersVersion = '2.2.2'
     }
 
     repositories {
