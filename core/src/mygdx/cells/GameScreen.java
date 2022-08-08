@@ -1,11 +1,10 @@
 package mygdx.cells;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -13,12 +12,15 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.SelectBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Vector2;
 
 public class GameScreen implements Screen {
 	float simFps = 15;
@@ -35,52 +37,72 @@ public class GameScreen implements Screen {
 	Color chunkColor = Color.BLACK;
 	
 	
-	/*
+	
 	Stage stage=new Stage();
 	Dialog dialog;
-	*/
+	Table table;
+	VerticalGroup vertGp;
 	
 	public GameScreen(final Cells game) {
+		//boilerplate
 		this.game = game;
 		camera = new OrthographicCamera();
 		viewport = new ExtendViewport(1280, 720, camera);
-		
 		camera.setToOrtho(false, 1280, 720);
-		
-		
-		
-		/*
 		Skin skin=new Skin(Gdx.files.internal("ui/uiskin.json"));
 
-		dialog=new Dialog("Setting",skin);
-		dialog.setSize(Gdx.graphics.getWidth()/10,200);
-		dialog.setPosition(Gdx.graphics.getWidth()/2-100,Gdx.graphics.getHeight()/2-100);
-
-		final SelectBox<String> selectBox=new SelectBox<String>(skin);
-		selectBox.setItems("XYZ","ABC","PQR","LMN");
-
-		dialog.getContentTable().defaults().pad(10);
-		dialog.getContentTable().add(selectBox);
-
-		dialog.scaleBy(-0.5f);
+		//create table and color selection dropdown
+		table = new Table();
+		final SelectBox<String> selectBox = new SelectBox<String>(skin);
+		selectBox.setItems("Green","Black","Red","Blue");
+		selectBox.addListener((e) -> {
+			if (e instanceof ChangeEvent) {
+					switch (selectBox.getSelected()) {
+						case "Green": cellColor = Color.GREEN; break;
+						case "Black": cellColor = Color.BLACK; break;
+						case "Red": cellColor = Color.RED; break;
+						case "Blue": cellColor = Color.BLUE; break;
+					}
+				}
+			return true;
+			});
+		Label label = new Label("Color", skin);
+		vertGp = new VerticalGroup();
+		vertGp.addActor(label);
+		vertGp.addActor(selectBox);
 		
-		stage.addActor(dialog);
-		*/
+		table.add(vertGp);
+		table.setPosition(0,Gdx.graphics.getHeight()-vertGp.getPrefHeight());
+		table.setBackground(skin.getDrawable("blue"));
+		table.left();
+		table.setSize(Gdx.graphics.getWidth(), vertGp.getPrefHeight());
+		table.debug();
+		stage.addActor(table);
 		
-		
-
-		Gdx.input.setInputProcessor(new InputAdapter() {
+		//input processor for the grid
+		InputAdapter cellsInput = new InputAdapter() {
 			@Override
 			public boolean scrolled(float amountX, float amountY) {
 				camera.zoom += amountY*0.2;
 				camera.zoom = MathUtils.clamp(camera.zoom, 0.1f, 100);
 				camera.update();
-				//System.out.println(camera.zoom);
+				return true;
+			}
+			
+			long timeClicked;
+			@Override
+			public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+				timeClicked = Gdx.input.getCurrentEventTime();
 				return true;
 			}
 			
 			@Override
-			public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+			public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+				
+				//mouse clicked instead of held
+				if ((Gdx.input.getCurrentEventTime() - timeClicked)/1_000_000_000.0 > 0.1) {
+					return true;
+				}
 				//find the coords of the chunk that was clicked on
 				Vector3 world = camera.unproject(new Vector3(screenX, screenY, 0));
 				int chunkScale = cellSize*Chunk.chunkSize;
@@ -96,18 +118,19 @@ public class GameScreen implements Screen {
 				Chunk thisChunk = Chunk.getChunkAt(worldChunk);
 				thisChunk.cells[cellCoords[0]][cellCoords[1]] = 1;
 				
-				//System.out.println(thisChunk.coord[0] + " " + thisChunk.coord[1] + " "+ cellCoords[0] + " " + cellCoords[1]);
-				System.out.println(Chunk.chunks.size());
 				return true;
 			}
 			
 			@Override
 			public boolean keyDown(int keycode) {
+				//toggle sim
 				if (keycode == Input.Keys.SPACE) run = !run;
 				return true;
 			}
-		});
+		};
 		
+		InputMultiplexer inputMulti = new InputMultiplexer(stage, cellsInput);
+		Gdx.input.setInputProcessor(inputMulti);
 	}
 
 	@Override
@@ -122,11 +145,11 @@ public class GameScreen implements Screen {
 	@Override
 	public void render(float delta) {
 		
+		//pan camera
 		if (Gdx.input.isTouched()) {
 			camera.translate(-Gdx.input.getDeltaX() * camera.zoom, Gdx.input.getDeltaY() * camera.zoom, 0);
 			camera.update();
 		}
-		
 		ScreenUtils.clear(bgColor);
 		
 		camera.update();
@@ -147,11 +170,9 @@ public class GameScreen implements Screen {
 				conway.applyRule();
 				}
 		}
-		System.out.println(timeSinceSim);
 		metabolize(conway);
-		//Gdx.input.setInputProcessor(stage);
-		//stage.act();
-		//stage.draw();
+		stage.act();
+		stage.draw();
 		
 	}
 	
@@ -208,7 +229,6 @@ public class GameScreen implements Screen {
 			}
 			else game.shapeRenderer.setColor(gridColor);
 			game.shapeRenderer.line(x, bottom, x, top);
-			//System.out.println(left-offsetX);
 		}
 		
 		//horizontals
