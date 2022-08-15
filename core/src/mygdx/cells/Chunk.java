@@ -13,14 +13,19 @@ public class Chunk {
 	public int[] coord;
 	public static ArrayList<int[]> allCoords = new ArrayList<int[]>();;
 	
-	//create default chunk
+	/**
+	 * create default chunk
+	 */
 	public Chunk() {
 		cells = new int[chunkSize][chunkSize];
 		this.coord = new int[]{0, 0};
 		allCoords.add(coord);
 	}
 	
-	//create new chunk and add it to list
+	/**
+	 * create new chunk and add it to the list
+	 * @param coord the coodinate of the chunk in chunk coordinates
+	 */
 	public Chunk(int[] coord) {
 		cells = new int[chunkSize][chunkSize];
 		this.coord = coord;
@@ -28,7 +33,7 @@ public class Chunk {
 		allCoords.add(coord);
 	}
 	
-	/*
+	/**
 	 * Generate new chunks
 	 */
 	public static void generateChunks() {
@@ -100,7 +105,7 @@ public class Chunk {
 	}
 	
 	
-	/*
+	/**
 	 * Remove empty chunks
 	 */
 	public static void disposeChunks() {
@@ -138,34 +143,28 @@ public class Chunk {
 		} 
 	}
 	
-	//assume all cells in all chunks have already been updated
-	//remove chunks with no cells
-	//create new chunk if a cell is within a 3 space buffer of border
-	public static void updateChunks() {
-		
-		
-	}
-	
-	/*
+	/**
 	 * returns true if the coord is in allCoords
+	 * @param coord the coordinate in chunk coordinates
 	 */
 	public static boolean containsCoord(int[] coord) {
 		return allCoords.stream().filter(o -> (o[0] == coord[0] && o[1] == coord[1])).findFirst().isPresent();
 	}
 	
-	/*
+	/**
 	 * Adds the chunk at the coord if it isn't already in the list
+	 * @param coord the coordinate in chunk coordinates
 	 */
 	public static void loadChunk(int[] coord) {
 		if (!Chunk.containsCoord(coord)) {
-			//System.out.println(chunks.size());
 			new Chunk(coord);
-			//System.out.println(chunks.size());
 		}
 	}
 	
-	/*
+	/**
 	 * Gets the chunk at the specified coords (null if none)
+	 * @param coords the coords in chunk coords
+	 * @return returns the chunk or null
 	 */
 	public static Chunk getChunkAt(int[] coords) {
 		//System.out.println(coords[0] + " " + coords[1] + " " + chunks.size());

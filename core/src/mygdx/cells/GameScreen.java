@@ -1,6 +1,8 @@
 package mygdx.cells;
 
 import java.util.Iterator;
+import java.util.Random;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
@@ -11,6 +13,8 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.SelectBox;
@@ -31,17 +35,18 @@ public class GameScreen implements Screen {
 	int cellSize = 50;
 	ConwaySim conway = new ConwaySim();
 	boolean run = false;
+	boolean showGrid = true;
+	boolean showChunks = false;
 	Color bgColor = Color.WHITE;
-	Color cellColor = Color.GREEN;
+	Color cellColor = Color.BLACK;
 	Color gridColor = Color.BLACK;
-	Color chunkColor = Color.BLACK;
+	Color chunkColor = Color.RED;
 	
 	
 	
 	Stage stage=new Stage();
 	Dialog dialog;
 	Table table;
-	VerticalGroup vertGp;
 	
 	public GameScreen(final Cells game) {
 		//boilerplate
@@ -51,33 +56,8 @@ public class GameScreen implements Screen {
 		camera.setToOrtho(false, 1280, 720);
 		Skin skin=new Skin(Gdx.files.internal("ui/uiskin.json"));
 
-		//create table and color selection dropdown
-		table = new Table();
-		final SelectBox<String> selectBox = new SelectBox<String>(skin);
-		selectBox.setItems("Green","Black","Red","Blue");
-		selectBox.addListener((e) -> {
-			if (e instanceof ChangeEvent) {
-					switch (selectBox.getSelected()) {
-						case "Green": cellColor = Color.GREEN; break;
-						case "Black": cellColor = Color.BLACK; break;
-						case "Red": cellColor = Color.RED; break;
-						case "Blue": cellColor = Color.BLUE; break;
-					}
-				}
-			return true;
-			});
-		Label label = new Label("Color", skin);
-		vertGp = new VerticalGroup();
-		vertGp.addActor(label);
-		vertGp.addActor(selectBox);
-		
-		table.add(vertGp);
-		table.setPosition(0,Gdx.graphics.getHeight()-vertGp.getPrefHeight());
-		table.setBackground(skin.getDrawable("blue"));
-		table.left();
-		table.setSize(Gdx.graphics.getWidth(), vertGp.getPrefHeight());
-		table.debug();
-		stage.addActor(table);
+		//create top settings bar
+		createMenuBar(skin);
 		
 		//input processor for the grid
 		InputAdapter cellsInput = new InputAdapter() {
@@ -133,6 +113,79 @@ public class GameScreen implements Screen {
 		Gdx.input.setInputProcessor(inputMulti);
 	}
 
+	private void createMenuBar(Skin skin) {
+		//main bar
+		table = new Table();
+		
+		//color selection
+		final SelectBox<String> colorSelect = new SelectBox<String>(skin);
+		colorSelect.setItems("Black", "Green", "Red", "Blue", "Random");
+		colorSelect.addListener((e) -> {
+			if (e instanceof ChangeEvent) {
+					switch (colorSelect.getSelected()) {
+						case "Green": cellColor = Color.GREEN; break;
+						case "Black": cellColor = Color.BLACK; break;
+						case "Red": cellColor = Color.RED; break;
+						case "Blue": cellColor = Color.BLUE; break;
+						case "Random": 
+							Random rand = new Random();
+							int num = rand.nextInt(0xfffffff);
+							cellColor = Color.valueOf(""+num); break;
+					}
+				}
+			return true;
+			});
+		Label colorLabel = new Label("Color", skin);
+		VerticalGroup colorGp = new VerticalGroup();
+		colorGp.addActor(colorLabel);
+		colorGp.addActor(colorSelect);
+		colorGp.pad(10f);
+		table.add(colorGp);
+		
+		//speed selection
+		final SelectBox<Integer> speedSelect = new SelectBox<Integer>(skin);
+		speedSelect.setItems(5, 10, 15, 30, 60, 144, 240);
+		speedSelect.setSelectedIndex(3);
+		speedSelect.addListener((e) -> {
+			switch(speedSelect.getSelected()) {
+				case 5: simFps = 5; break;
+				case 10: simFps = 10; break;
+				case 15: simFps = 15; break;
+				case 30: simFps = 30; break;
+				case 60: simFps = 60; break;
+				case 144: simFps = 144; break;
+				case 240: simFps = 240; break;
+			}
+			return true;
+		});
+		Label speedLabel = new Label("Ticks/sec", skin);
+		VerticalGroup speedGp = new VerticalGroup();
+		speedGp.addActor(speedLabel);
+		speedGp.addActor(speedSelect);
+		speedGp.pad(10f);
+		table.add(speedGp);
+		
+		//draw grid option
+		CheckBox showGridButton = new CheckBox("Show grid",skin);
+		showGridButton.setChecked(true);
+		showGridButton.addListener((e) -> {
+				if (showGridButton.isChecked()) showGrid = true;
+				else showGrid = false;
+				return true;
+			});
+		showGridButton.pad(10f);
+		table.add(showGridButton);
+		
+		//finish table
+		table.setPosition(0,Gdx.graphics.getHeight()-colorGp.getPrefHeight());
+		table.setBackground(skin.getDrawable("blue"));
+		
+		table.left();
+		table.setSize(Gdx.graphics.getWidth(), colorGp.getPrefHeight());
+		//table.debug();
+		stage.addActor(table);
+	}
+
 	@Override
 	public void show() {
 		// TODO Auto-generated method stub
@@ -160,8 +213,8 @@ public class GameScreen implements Screen {
 		game.font.draw(game.batch, ""+1/delta, 300, 200);
 		game.batch.end();
 		
-		
 		drawGrid();
+		drawChunks();
 		
 		timeSinceSim += delta;
 		if (timeSinceSim >= 1/simFps) {
@@ -176,6 +229,39 @@ public class GameScreen implements Screen {
 		
 	}
 	
+	private void drawChunks() {
+		if (!showChunks) return;
+		
+		game.shapeRenderer.setProjectionMatrix(camera.combined);
+		
+		float top = camera.unproject(new Vector3(0, 0, 0)).y;
+		float bottom = camera.unproject(new Vector3(0, camera.viewportHeight, 0)).y;
+		float left = camera.unproject(new Vector3(0, 0, 0)).x;
+		float right = camera.unproject(new Vector3(camera.viewportWidth, 0, 0)).x;
+
+		//We need to offset the grid so it doesn't stick to the camera
+		float offsetX = left % cellSize;
+		float offsetY = bottom % cellSize;
+		game.shapeRenderer.begin(ShapeType.Line);
+		game.shapeRenderer.setColor(chunkColor);
+		//verticals
+		for (float x = left-offsetX; x < right; x+=cellSize) {
+			if (x/2 % (Chunk.chunkSize) == 0) { //render chunks
+				if (Chunk.containsCoord(null));
+				game.shapeRenderer.line(x, bottom, x, top);
+			}
+					
+		}
+				
+		//horizontals
+		for (float y = bottom-offsetY; y < top; y+=cellSize) {
+			if (y/2 % (Chunk.chunkSize) == 0) { //render chunks
+				game.shapeRenderer.line(left, y, right, y);
+			}
+		}
+		game.shapeRenderer.end();
+	}
+
 	/*
 	 * Process the given automaton: render this tick
 	 * and calculate the next
@@ -210,6 +296,8 @@ public class GameScreen implements Screen {
 	
 	
 	public void drawGrid() {
+		if (!showGrid) return;
+		
 		game.shapeRenderer.setProjectionMatrix(camera.combined);
 		
 		float top = camera.unproject(new Vector3(0, 0, 0)).y;
@@ -221,22 +309,15 @@ public class GameScreen implements Screen {
 		float offsetX = left % cellSize;
 		float offsetY = bottom % cellSize;
 		game.shapeRenderer.begin(ShapeType.Line);
+		game.shapeRenderer.setColor(gridColor);
 		
 		//verticals
 		for (float x = left-offsetX; x < right; x+=cellSize) {
-			if (x/2 % (Chunk.chunkSize) == 0) { //render chunks
-				game.shapeRenderer.setColor(chunkColor);
-			}
-			else game.shapeRenderer.setColor(gridColor);
 			game.shapeRenderer.line(x, bottom, x, top);
 		}
 		
 		//horizontals
 		for (float y = bottom-offsetY; y < top; y+=cellSize) {
-			if (y/2 % (Chunk.chunkSize) == 0) { //render chunks
-				game.shapeRenderer.setColor(chunkColor);
-			}
-			else game.shapeRenderer.setColor(gridColor);
 			game.shapeRenderer.line(left, y, right, y);
 		}
 		game.shapeRenderer.end();
