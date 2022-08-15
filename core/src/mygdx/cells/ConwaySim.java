@@ -1,9 +1,8 @@
 package mygdx.cells;
 
-import java.util.Arrays;
 import java.util.Iterator;
 
-/*
+/**
  * Conway's game of life:
  * Cells are alive on next tick if:
  * 1. it is alive and 2 of its neighbors are alive, or

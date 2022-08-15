@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+
 //x+ is right, y+ is down
 public class Chunk {
 	public static ArrayList<Chunk> chunks = new ArrayList<Chunk>();
@@ -41,6 +42,7 @@ public class Chunk {
 	 * Generate new chunks
 	 */
 	public static void generateChunks() {
+		@SuppressWarnings("unchecked")
 		ArrayList<Chunk> newChunks = (ArrayList<Chunk>) chunks.clone();
 		Iterator<Chunk> iter = newChunks.iterator();
 		//add new chunks

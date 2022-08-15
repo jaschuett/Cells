@@ -39,9 +39,6 @@ public class GameScreen implements Screen {
 	Color cellColor = Color.BLACK;
 	Color gridColor = Color.BLACK;
 	Color chunkColor = Color.RED;
-	
-	
-	
 	Stage stage=new Stage();
 	Dialog dialog;
 	Table table;
@@ -194,14 +191,9 @@ public class GameScreen implements Screen {
 		stage.addActor(table);
 	}
 
-	@Override
-	public void show() {
-		// TODO Auto-generated method stub
-		
-	}
 
-	/*
-	 * meat
+	/**
+	 * Render the screen
 	 */
 	@Override
 	public void render(float delta) {
@@ -241,19 +233,10 @@ public class GameScreen implements Screen {
 		if (!showChunks) return;
 		if (Chunk.chunks.isEmpty()) return;
 		
+		//setup
 		game.shapeRenderer.setProjectionMatrix(camera.combined);
-		
-		float top = camera.unproject(new Vector3(0, 0, 0)).y;
-		float bottom = camera.unproject(new Vector3(0, camera.viewportHeight, 0)).y;
-		float left = camera.unproject(new Vector3(0, 0, 0)).x;
-		float right = camera.unproject(new Vector3(camera.viewportWidth, 0, 0)).x;
-
-		//We need to offset the grid so it doesn't stick to the camera
-		float offsetX = left % cellSize;
-		float offsetY = bottom % cellSize;
 		game.shapeRenderer.begin(ShapeType.Line);
 		game.shapeRenderer.setColor(chunkColor);
-		
 		
 		for (Chunk chunk: Chunk.chunks) {
 			int[] cellCoords = chunk.chunkCoordsToCell();
@@ -271,19 +254,14 @@ public class GameScreen implements Screen {
 			//down
 			game.shapeRenderer.line(coordinates[0], coordinates[1]+Chunk.chunkSize*cellSize, coordinates[0]+Chunk.chunkSize*cellSize, coordinates[1]+Chunk.chunkSize*cellSize);
 		}
-		
-		
-		
 		game.shapeRenderer.end();
 	}
 
-	/*
+	/**
 	 * Process the given automaton: render this tick
 	 * and calculate the next
 	 */
 	public void metabolize(Automaton auto) {
-		
-		
 		//render the cells
 		game.shapeRenderer.begin(ShapeType.Filled);
 		game.shapeRenderer.setColor(cellColor);
@@ -308,7 +286,6 @@ public class GameScreen implements Screen {
 		}
 		game.shapeRenderer.end();
 	}
-	
 	
 	public void drawGrid() {
 		if (!showGrid) return;
@@ -369,4 +346,9 @@ public class GameScreen implements Screen {
 		game.shapeRenderer.dispose();
 	}
 
+	@Override
+	public void show() {
+		// TODO Auto-generated method stub
+		
+	}
 }
