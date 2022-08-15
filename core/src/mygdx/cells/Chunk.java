@@ -10,6 +10,10 @@ public class Chunk {
 	final public static int chunkSize = 16;
 	public int[][] cells;
 	public int[][] cellBuffer;
+	/**
+	 * Coordinate of the chunk.
+	 * Chunk coords: right is +x, down is +y, origin is {0, 0} in center of screen
+	 */
 	public int[] coord;
 	public static ArrayList<int[]> allCoords = new ArrayList<int[]>();;
 	
@@ -162,12 +166,21 @@ public class Chunk {
 	}
 	
 	/**
+	 * Converts chunk coords to world coords (cell coords)
+	 * @param coords the chunk coords
+	 * @return absolute cell coords of cell in upper left of chunk
+	 */
+	public int[] chunkCoordsToCell() {
+		return new int[] {coord[0]*chunkSize, coord[1]*chunkSize};
+	}
+	
+	
+	/**
 	 * Gets the chunk at the specified coords (null if none)
 	 * @param coords the coords in chunk coords
 	 * @return returns the chunk or null
 	 */
 	public static Chunk getChunkAt(int[] coords) {
-		//System.out.println(coords[0] + " " + coords[1] + " " + chunks.size());
 		try {
 			return Chunk.chunks.stream().filter(o -> (Arrays.equals(o.coord, coords))).findFirst().get();
 		} catch (NoSuchElementException e) {

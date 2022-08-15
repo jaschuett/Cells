@@ -2,7 +2,6 @@ package mygdx.cells;
 
 import java.util.Iterator;
 import java.util.Random;
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
@@ -13,7 +12,6 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -36,7 +34,7 @@ public class GameScreen implements Screen {
 	ConwaySim conway = new ConwaySim();
 	boolean run = false;
 	boolean showGrid = true;
-	boolean showChunks = false;
+	boolean showChunks = true;
 	Color bgColor = Color.WHITE;
 	Color cellColor = Color.BLACK;
 	Color gridColor = Color.BLACK;
@@ -166,7 +164,7 @@ public class GameScreen implements Screen {
 		table.add(speedGp);
 		
 		//draw grid option
-		CheckBox showGridButton = new CheckBox("Show grid",skin);
+		CheckBox showGridButton = new CheckBox("Show grid", skin);
 		showGridButton.setChecked(true);
 		showGridButton.addListener((e) -> {
 				if (showGridButton.isChecked()) showGrid = true;
@@ -175,6 +173,16 @@ public class GameScreen implements Screen {
 			});
 		showGridButton.pad(10f);
 		table.add(showGridButton);
+		
+		//draw chunk borders option
+		CheckBox showChunksButton = new CheckBox("Show chunks", skin);
+		showChunksButton.addListener((e) -> {
+			if (showChunksButton.isChecked()) showChunks = true;
+			else showChunks = false;
+			return true;
+		});
+		showChunksButton.pad(10f);
+		table.add(showChunksButton);
 		
 		//finish table
 		table.setPosition(0,Gdx.graphics.getHeight()-colorGp.getPrefHeight());
@@ -231,6 +239,7 @@ public class GameScreen implements Screen {
 	
 	private void drawChunks() {
 		if (!showChunks) return;
+		if (Chunk.chunks.isEmpty()) return;
 		
 		game.shapeRenderer.setProjectionMatrix(camera.combined);
 		
@@ -244,21 +253,27 @@ public class GameScreen implements Screen {
 		float offsetY = bottom % cellSize;
 		game.shapeRenderer.begin(ShapeType.Line);
 		game.shapeRenderer.setColor(chunkColor);
-		//verticals
-		for (float x = left-offsetX; x < right; x+=cellSize) {
-			if (x/2 % (Chunk.chunkSize) == 0) { //render chunks
-				if (Chunk.containsCoord(null));
-				game.shapeRenderer.line(x, bottom, x, top);
-			}
-					
+		
+		
+		for (Chunk chunk: Chunk.chunks) {
+			int[] cellCoords = chunk.chunkCoordsToCell();
+			int[] coordinates = new int[] {cellCoords[0]*cellSize, cellCoords[1]*cellSize};
+			
+			//left edge
+			game.shapeRenderer.line(coordinates[0], coordinates[1], coordinates[0], coordinates[1]+Chunk.chunkSize*cellSize);
+			
+			//right
+			game.shapeRenderer.line(coordinates[0]+Chunk.chunkSize*cellSize, coordinates[1], coordinates[0]+Chunk.chunkSize*cellSize, coordinates[1]+Chunk.chunkSize*cellSize);
+			
+			//up
+			game.shapeRenderer.line(coordinates[0], coordinates[1], coordinates[0]+Chunk.chunkSize*cellSize, coordinates[1]);
+			
+			//down
+			game.shapeRenderer.line(coordinates[0], coordinates[1]+Chunk.chunkSize*cellSize, coordinates[0]+Chunk.chunkSize*cellSize, coordinates[1]+Chunk.chunkSize*cellSize);
 		}
-				
-		//horizontals
-		for (float y = bottom-offsetY; y < top; y+=cellSize) {
-			if (y/2 % (Chunk.chunkSize) == 0) { //render chunks
-				game.shapeRenderer.line(left, y, right, y);
-			}
-		}
+		
+		
+		
 		game.shapeRenderer.end();
 	}
 
