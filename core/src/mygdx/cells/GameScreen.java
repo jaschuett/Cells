@@ -1,5 +1,6 @@
 package mygdx.cells;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
 import com.badlogic.gdx.Gdx;
@@ -34,7 +35,7 @@ public class GameScreen implements Screen {
 	ConwaySim conway = new ConwaySim();
 	boolean run = false;
 	boolean showGrid = true;
-	boolean showChunks = true;
+	boolean showChunks = false;
 	Color bgColor = Color.WHITE;
 	Color cellColor = Color.BLACK;
 	Color gridColor = Color.BLACK;
@@ -99,7 +100,19 @@ public class GameScreen implements Screen {
 			@Override
 			public boolean keyDown(int keycode) {
 				//toggle sim
-				if (keycode == Input.Keys.SPACE) run = !run;
+				if (keycode == Input.Keys.SPACE) {
+					run = !run;
+					return true;
+				}
+				
+				//reset sim
+				if (keycode == Input.Keys.R) {
+					for (Chunk chunk: Chunk.chunks) {
+						chunk.cells = new int[cellSize][cellSize];
+					}
+					return true;
+				}
+				
 				return true;
 			}
 		};
@@ -111,6 +124,8 @@ public class GameScreen implements Screen {
 	private void createMenuBar(Skin skin) {
 		//main bar
 		table = new Table();
+		
+		float padding = 10f;
 		
 		//color selection
 		final SelectBox<String> colorSelect = new SelectBox<String>(skin);
@@ -134,7 +149,7 @@ public class GameScreen implements Screen {
 		VerticalGroup colorGp = new VerticalGroup();
 		colorGp.addActor(colorLabel);
 		colorGp.addActor(colorSelect);
-		colorGp.pad(10f);
+		colorGp.pad(padding);
 		table.add(colorGp);
 		
 		//speed selection
@@ -157,7 +172,7 @@ public class GameScreen implements Screen {
 		VerticalGroup speedGp = new VerticalGroup();
 		speedGp.addActor(speedLabel);
 		speedGp.addActor(speedSelect);
-		speedGp.pad(10f);
+		speedGp.pad(padding);
 		table.add(speedGp);
 		
 		//draw grid option
@@ -168,7 +183,7 @@ public class GameScreen implements Screen {
 				else showGrid = false;
 				return true;
 			});
-		showGridButton.pad(10f);
+		showGridButton.pad(padding);
 		table.add(showGridButton);
 		
 		//draw chunk borders option
@@ -178,8 +193,22 @@ public class GameScreen implements Screen {
 			else showChunks = false;
 			return true;
 		});
-		showChunksButton.pad(10f);
+		showChunksButton.pad(padding);
 		table.add(showChunksButton);
+		
+		//reset
+		Label restartLabel = new Label("Reset:[R]", skin);
+		VerticalGroup rsGp = new VerticalGroup();
+		rsGp.addActor(restartLabel);
+		rsGp.pad(padding);
+		table.add(rsGp);
+		
+		//start/stop
+		Label startLabel = new Label("Start/stop:[Space]", skin);
+		VerticalGroup ssGp = new VerticalGroup();
+		ssGp.addActor(startLabel);
+		ssGp.pad(padding);
+		table.add(ssGp);
 		
 		//finish table
 		table.setPosition(0,Gdx.graphics.getHeight()-colorGp.getPrefHeight());

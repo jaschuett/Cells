@@ -13,6 +13,7 @@ public class DesktopLauncher {
 		//config.useVsync(true);
 		config.setTitle("cells");
 		config.setWindowedMode(1280, 720);
+		config.setResizable(false);
 		new Lwjgl3Application(new Cells(), config);
 	}
 }
