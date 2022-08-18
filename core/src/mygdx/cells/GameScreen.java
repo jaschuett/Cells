@@ -1,6 +1,5 @@
 package mygdx.cells;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
 import com.badlogic.gdx.Gdx;
@@ -58,9 +57,10 @@ public class GameScreen implements Screen {
 		//input processor for the grid
 		InputAdapter cellsInput = new InputAdapter() {
 			@Override
+			//zoom
 			public boolean scrolled(float amountX, float amountY) {
-				camera.zoom += amountY*0.2;
-				camera.zoom = MathUtils.clamp(camera.zoom, 0.1f, 100);
+				camera.zoom += amountY*0.75;
+				camera.zoom = MathUtils.clamp(camera.zoom, 0.5f, 1000);
 				camera.update();
 				return true;
 			}
@@ -153,18 +153,18 @@ public class GameScreen implements Screen {
 		table.add(colorGp);
 		
 		//speed selection
-		final SelectBox<Integer> speedSelect = new SelectBox<Integer>(skin);
-		speedSelect.setItems(5, 10, 15, 30, 60, 144, 240);
+		final SelectBox<String> speedSelect = new SelectBox<String>(skin);
+		speedSelect.setItems("5", "10", "15", "30", "60", "120", "Unlimited");
 		speedSelect.setSelectedIndex(3);
 		speedSelect.addListener((e) -> {
 			switch(speedSelect.getSelected()) {
-				case 5: simFps = 5; break;
-				case 10: simFps = 10; break;
-				case 15: simFps = 15; break;
-				case 30: simFps = 30; break;
-				case 60: simFps = 60; break;
-				case 144: simFps = 144; break;
-				case 240: simFps = 240; break;
+				case "5": simFps = 5; break;
+				case "10": simFps = 10; break;
+				case "15": simFps = 15; break;
+				case "30": simFps = 30; break;
+				case "60": simFps = 60; break;
+				case "120": simFps = 120; break;
+				case "Unlimited": simFps = Integer.MAX_VALUE; break;
 			}
 			return true;
 		});
@@ -239,7 +239,7 @@ public class GameScreen implements Screen {
 		game.shapeRenderer.setProjectionMatrix(camera.combined);
 		
 		game.batch.begin();
-		game.font.draw(game.batch, ""+1/delta, 300, 200);
+		//game.font.draw(game.batch, ""+1/delta, 300, 200);
 		game.batch.end();
 		
 		drawGrid();
