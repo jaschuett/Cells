@@ -31,7 +31,7 @@ public class GameScreen implements Screen {
 	OrthographicCamera camera;
 	ExtendViewport viewport;
 	int cellSize = 50;
-	ConwaySim conway = new ConwaySim();
+	Automaton ruleset = new ConwaySim();
 	boolean run = false;
 	boolean showGrid = true;
 	boolean showChunks = false;
@@ -239,7 +239,6 @@ public class GameScreen implements Screen {
 		game.shapeRenderer.setProjectionMatrix(camera.combined);
 		
 		game.batch.begin();
-		//game.font.draw(game.batch, ""+1/delta, 300, 200);
 		game.batch.end();
 		
 		drawGrid();
@@ -249,10 +248,10 @@ public class GameScreen implements Screen {
 		if (timeSinceSim >= 1/simFps) {
 			timeSinceSim = 0;
 			if (run) {
-				conway.applyRule();
+					CalculateNewTick.calculate(ruleset);
 				}
 		}
-		metabolize(conway);
+		metabolize();
 		stage.act();
 		stage.draw();
 		
@@ -290,7 +289,7 @@ public class GameScreen implements Screen {
 	 * Process the given automaton: render this tick
 	 * and calculate the next
 	 */
-	public void metabolize(Automaton auto) {
+	public void metabolize() {
 		//render the cells
 		game.shapeRenderer.begin(ShapeType.Filled);
 		game.shapeRenderer.setColor(cellColor);
