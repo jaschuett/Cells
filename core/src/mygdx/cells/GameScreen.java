@@ -1,5 +1,4 @@
 package mygdx.cells;
-
 import java.util.Iterator;
 import java.util.Random;
 import com.badlogic.gdx.Gdx;
@@ -12,14 +11,17 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
+import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.SelectBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.math.MathUtils;
@@ -31,7 +33,6 @@ public class GameScreen implements Screen {
 	OrthographicCamera camera;
 	ExtendViewport viewport;
 	int cellSize = 50;
-	Automaton ruleset = new ConwaySim();
 	boolean run = false;
 	boolean showGrid = true;
 	boolean showChunks = false;
@@ -40,8 +41,20 @@ public class GameScreen implements Screen {
 	Color gridColor = Color.BLACK;
 	Color chunkColor = Color.RED;
 	Stage stage=new Stage();
-	Dialog dialog;
+	Skin skin=new Skin(Gdx.files.internal("ui/uiskin.json"));
 	Table table;
+	Table rulesDialog;
+	boolean dialogUp = false;
+	
+	/**
+	 * Bit flags to represent the game rules. Index represents
+	 * number of neighbors from 0-8, value indicates whether the
+	 * cell should be born/survive with index many neighbors.
+	 * Default is Conway rules
+	 */
+	byte[] birth = new byte[] {0, 0, 0, 1, 0, 0, 0, 0, 0};
+	byte[] survive = new byte[] {0, 0, 1, 1, 0, 0, 0, 0, 0};
+	Automaton ruleset = new Automaton(birth, survive);
 	
 	public GameScreen(final Cells game) {
 		//boilerplate
@@ -49,7 +62,6 @@ public class GameScreen implements Screen {
 		camera = new OrthographicCamera();
 		viewport = new ExtendViewport(1280, 720, camera);
 		camera.setToOrtho(false, 1280, 720);
-		Skin skin=new Skin(Gdx.files.internal("ui/uiskin.json"));
 
 		//create top settings bar
 		createMenuBar(skin);
@@ -102,7 +114,6 @@ public class GameScreen implements Screen {
 				//toggle sim
 				if (keycode == Input.Keys.SPACE) {
 					run = !run;
-					return true;
 				}
 				
 				//reset sim
@@ -110,7 +121,11 @@ public class GameScreen implements Screen {
 					for (Chunk chunk: Chunk.chunks) {
 						chunk.cells = new int[cellSize][cellSize];
 					}
-					return true;
+				}
+				
+				//edit rules
+				if (keycode == Input.Keys.E) {
+					createRulesDialog(skin);
 				}
 				
 				return true;
@@ -119,6 +134,72 @@ public class GameScreen implements Screen {
 		
 		InputMultiplexer inputMulti = new InputMultiplexer(stage, cellsInput);
 		Gdx.input.setInputProcessor(inputMulti);
+	}
+	
+	private void createRulesDialog(Skin skin) {
+		if (dialogUp) {
+			rulesDialog.remove();
+			dialogUp = false;
+			return;
+		}
+		
+		dialogUp = true;
+		
+		//dialog window
+		rulesDialog = new Table(skin);
+		rulesDialog.setSize(250, 350);
+		rulesDialog.align(Align.center);
+		rulesDialog.setBackground(skin.getDrawable("dialog"));
+		rulesDialog.setX(Gdx.graphics.getWidth()-rulesDialog.getWidth());
+		rulesDialog.setY(Gdx.graphics.getHeight()/2-rulesDialog.getHeight()/2);
+		
+		//birth/survival buttons
+		final int NUM_BUTTONS = 9;
+		final int BUTTON_PADDING = 5;
+		VerticalGroup birthButtons = new VerticalGroup();
+		Label birthLabel = new Label("Birth", skin);
+		birthButtons.addActor(birthLabel);
+		
+		VerticalGroup surviveButtons = new VerticalGroup();
+		Label surviveLabel = new Label("Survive", skin);
+		surviveButtons.addActor(surviveLabel);
+		for (int i = 0; i < NUM_BUTTONS; i++) {
+			int buttonIndex = i;
+			
+			//set up the birth rule buttons
+			CheckBox birth = new CheckBox(""+i, skin);
+			birth.setChecked(ruleset.birth[buttonIndex] == 1);
+			birth.addListener((e) -> {
+				if (birth.isChecked()) {
+					ruleset.birth[buttonIndex] = 1;
+				} else {
+					ruleset.birth[buttonIndex] = 0;
+				}
+				return true;
+				});
+			birth.pad(BUTTON_PADDING);
+			birthButtons.addActor(birth);
+			
+			//set up the survive rule buttons
+			CheckBox survive = new CheckBox(""+i, skin);
+			survive.setChecked(ruleset.survive[buttonIndex] == 1);
+			survive.addListener((e) -> {
+				
+				if (survive.isChecked()) {
+					ruleset.survive[buttonIndex] = 1;
+					return true;
+				} else {
+					ruleset.survive[buttonIndex] = 0;
+					return true;
+				}
+				});
+			survive.pad(BUTTON_PADDING);
+			surviveButtons.addActor(survive);
+		}
+		
+		rulesDialog.add(birthButtons);
+		rulesDialog.add(surviveButtons);
+		stage.addActor(rulesDialog);
 	}
 
 	private void createMenuBar(Skin skin) {
@@ -197,18 +278,25 @@ public class GameScreen implements Screen {
 		table.add(showChunksButton);
 		
 		//reset
-		Label restartLabel = new Label("Reset:[R]", skin);
+		Label restartLabel = new Label("Reset\n[R]", skin);
 		VerticalGroup rsGp = new VerticalGroup();
 		rsGp.addActor(restartLabel);
 		rsGp.pad(padding);
 		table.add(rsGp);
 		
 		//start/stop
-		Label startLabel = new Label("Start/stop:[Space]", skin);
+		Label startLabel = new Label("Start/stop\n[Space]", skin);
 		VerticalGroup ssGp = new VerticalGroup();
 		ssGp.addActor(startLabel);
 		ssGp.pad(padding);
 		table.add(ssGp);
+		
+		//rules
+		Label rulesDialogButtonLabel = new Label("Edit Rules\n[E]", skin);
+		HorizontalGroup rulesDialogButtonGp = new HorizontalGroup();
+		rulesDialogButtonGp.addActor(rulesDialogButtonLabel);
+		rulesDialogButtonGp.pad(padding);
+		table.add(rulesDialogButtonGp);
 		
 		//finish table
 		table.setPosition(0,Gdx.graphics.getHeight()-colorGp.getPrefHeight());

@@ -8,7 +8,7 @@ import java.util.NoSuchElementException;
 //x+ is right, y+ is down
 public class Chunk {
 	public static ArrayList<Chunk> chunks = new ArrayList<Chunk>();
-	final public static int chunkSize = 16;
+	final public static int chunkSize = 50;
 	public int[][] cells;
 	public int[][] cellBuffer;
 	/**
