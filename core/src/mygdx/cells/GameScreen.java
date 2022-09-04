@@ -157,10 +157,12 @@ public class GameScreen implements Screen {
 		final int NUM_BUTTONS = 9;
 		final int BUTTON_PADDING = 5;
 		VerticalGroup birthButtons = new VerticalGroup();
+		birthButtons.pad(BUTTON_PADDING*2);
 		Label birthLabel = new Label("Birth", skin);
 		birthButtons.addActor(birthLabel);
 		
 		VerticalGroup surviveButtons = new VerticalGroup();
+		surviveButtons.pad(BUTTON_PADDING*2);
 		Label surviveLabel = new Label("Survive", skin);
 		surviveButtons.addActor(surviveLabel);
 		for (int i = 0; i < NUM_BUTTONS; i++) {
@@ -342,7 +344,6 @@ public class GameScreen implements Screen {
 		metabolize();
 		stage.act();
 		stage.draw();
-		
 	}
 	
 	private void drawChunks() {

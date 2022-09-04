@@ -31,7 +31,7 @@ public class CalculateNewTick {
 		while (iter.hasNext()) {
 			Chunk chunk = iter.next();
 			int[][] newTick = new int[Chunk.chunkSize][Chunk.chunkSize];
-			
+			int newTickLiveCount = 0;
 			//for every cell in the chunk
 			for (int x = 0; x < Chunk.chunkSize; x++) {
 				for (int y = 0; y < Chunk.chunkSize; y++) {
@@ -90,13 +90,16 @@ public class CalculateNewTick {
 							}
 						 }
 					}
-					newTick[x][y] = ruleset.applyRule(neighbors, chunk.cells[x][y]);
+					int liveOrNot = ruleset.applyRule(neighbors, chunk.cells[x][y]);
+					newTick[x][y] = liveOrNot;
+					if (liveOrNot == 1) {newTickLiveCount++;}
 				}
 			}
 			
-			//update the chunk's cell buffer
+			//update the chunk's cell buffer and live count
 			chunk.cellBuffer = newTick;
-		}//end iterator while loop
+			chunk.liveCount = newTickLiveCount;
+		}
 		
 		//update every chunk at once
 		iter = Chunk.chunks.iterator();

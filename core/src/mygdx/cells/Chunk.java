@@ -7,10 +7,21 @@ import java.util.NoSuchElementException;
 
 //x+ is right, y+ is down
 public class Chunk {
+	/**
+	 * 0
+	 */
+	final static int COORD_X = 0;
+	
+	/**
+	 * 1
+	 */
+	final static int COORD_Y = 1;
+	
 	public static ArrayList<Chunk> chunks = new ArrayList<Chunk>();
 	final public static int chunkSize = 50;
 	public int[][] cells;
 	public int[][] cellBuffer;
+	public int liveCount = 0;
 	/**
 	 * Coordinate of the chunk.
 	 * Chunk coords: right is +x, down is +y, origin is {0, 0} in center of screen
@@ -55,10 +66,10 @@ public class Chunk {
 			for (int x = 0; x < buffer; x++) {
 				for (int y = 0; y < chunkSize; y++) {
 					if (chunkIter.cells[x][y] != 0) {
-						if (containsCoord(new int[] {chunkIter.coord[0]-1, chunkIter.coord[1]})) {
+						if (containsCoord(new int[] {chunkIter.coord[COORD_X]-1, chunkIter.coord[COORD_Y]})) {
 							break;
 						} else {
-							loadChunk(new int[] {chunkIter.coord[0]-1, chunkIter.coord[1]});
+							loadChunk(new int[] {chunkIter.coord[COORD_X]-1, chunkIter.coord[COORD_Y]});
 							break;
 						}
 					}
@@ -69,10 +80,10 @@ public class Chunk {
 			for (int x = chunkSize-buffer; x < chunkSize; x++) {
 				for (int y = 0; y < chunkSize; y++) {
 					if (chunkIter.cells[x][y] != 0) {
-						if (containsCoord(new int[] {chunkIter.coord[0]+1, chunkIter.coord[1]})) {
+						if (containsCoord(new int[] {chunkIter.coord[COORD_X]+1, chunkIter.coord[COORD_Y]})) {
 							break;
 						} else {
-							loadChunk(new int[] {chunkIter.coord[0]+1, chunkIter.coord[1]});
+							loadChunk(new int[] {chunkIter.coord[COORD_X]+1, chunkIter.coord[COORD_Y]});
 							break;
 						}
 					}
@@ -83,10 +94,10 @@ public class Chunk {
 			for (int x = 0; x < chunkSize; x++) {
 				for (int y = 0; y < buffer; y++) {
 					if (chunkIter.cells[x][y] != 0) {
-						if (containsCoord(new int[] {chunkIter.coord[0], chunkIter.coord[1]-1})) {
+						if (containsCoord(new int[] {chunkIter.coord[COORD_X], chunkIter.coord[COORD_Y]-1})) {
 							break;
 						} else {
-							loadChunk(new int[] {chunkIter.coord[0], chunkIter.coord[1]-1});
+							loadChunk(new int[] {chunkIter.coord[COORD_X], chunkIter.coord[COORD_Y]-1});
 							break;
 						}
 					}
@@ -97,10 +108,10 @@ public class Chunk {
 			for (int x = 0; x < chunkSize; x++) {
 				for (int y = chunkSize-buffer; y < chunkSize; y++) {
 					if (chunkIter.cells[x][y] != 0) {
-						if (containsCoord(new int[] {chunkIter.coord[0], chunkIter.coord[1]+1})) {
+						if (containsCoord(new int[] {chunkIter.coord[COORD_X], chunkIter.coord[COORD_Y]+1})) {
 							break;
 						} else {
-							loadChunk(new int[] {chunkIter.coord[0], chunkIter.coord[1]+1});
+							loadChunk(new int[] {chunkIter.coord[COORD_X], chunkIter.coord[COORD_Y]+1});
 							break;
 						}
 					}
@@ -119,22 +130,9 @@ public class Chunk {
 		while (chunkIterator.hasNext()) {
 			
 			Chunk chunkIter = chunkIterator.next();
-			boolean empty = true;
 			
-			//remove empty chunks
-			for (int x = 0; x < chunkSize; x++) {
-				for (int y = 0; y < chunkSize; y++) {
-					if (chunkIter.cells[x][y] != 0) {
-						empty = false;
-						break;
-					}
-				}
-				if (!empty) {
-					break;
-				}
-			}
-			
-			if (empty) {
+			//if chunk is empty
+			if (chunkIter.liveCount == 0) {
 				chunkIterator.remove();
 			}
 			
@@ -154,7 +152,7 @@ public class Chunk {
 	 * @param coord the coordinate in chunk coordinates
 	 */
 	public static boolean containsCoord(int[] coord) {
-		return allCoords.stream().filter(o -> (o[0] == coord[0] && o[1] == coord[1])).findFirst().isPresent();
+		return allCoords.stream().filter(o -> (o[COORD_X] == coord[COORD_X] && o[COORD_Y] == coord[COORD_Y])).findFirst().isPresent();
 	}
 	
 	/**
@@ -173,7 +171,7 @@ public class Chunk {
 	 * @return absolute cell coords of cell in upper left of chunk
 	 */
 	public int[] chunkCoordsToCell() {
-		return new int[] {coord[0]*chunkSize, coord[1]*chunkSize};
+		return new int[] {coord[COORD_X]*chunkSize, coord[COORD_Y]*chunkSize};
 	}
 	
 	
