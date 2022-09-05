@@ -8,14 +8,19 @@ import java.util.NoSuchElementException;
 //x+ is right, y+ is down
 public class Chunk {
 	/**
+	 * -1
+	 */
+	final static int LEFT = -1,  UP = -1;
+	
+	/**
 	 * 0
 	 */
-	final static int COORD_X = 0;
+	final static int COORD_X = 0, XCENTER = 0, YCENTER = 0;
 	
 	/**
 	 * 1
 	 */
-	final static int COORD_Y = 1;
+	final static int COORD_Y = 1, RIGHT = 1, DOWN = 1;
 	
 	public static ArrayList<Chunk> chunks = new ArrayList<Chunk>();
 	final public static int chunkSize = 50;
@@ -59,66 +64,56 @@ public class Chunk {
 		//add new chunks
 		while (iter.hasNext()) {
 			Chunk chunkIter = iter.next();
+			generateChunkNeighbor(chunkIter, LEFT, YCENTER);
+			generateChunkNeighbor(chunkIter, XCENTER, UP);
+			generateChunkNeighbor(chunkIter, RIGHT, YCENTER);
+			generateChunkNeighbor(chunkIter, XCENTER, DOWN);
+		}
+		
+	}
 
-			int buffer = 3;
-			//add new chunks
-			//left neighbor
-			for (int x = 0; x < buffer; x++) {
-				for (int y = 0; y < chunkSize; y++) {
-					if (chunkIter.cells[x][y] != 0) {
-						if (containsCoord(new int[] {chunkIter.coord[COORD_X]-1, chunkIter.coord[COORD_Y]})) {
-							break;
-						} else {
-							loadChunk(new int[] {chunkIter.coord[COORD_X]-1, chunkIter.coord[COORD_Y]});
-							break;
-						}
-					}
-				}
-			}
-			
-			//right neighbor
-			for (int x = chunkSize-buffer; x < chunkSize; x++) {
-				for (int y = 0; y < chunkSize; y++) {
-					if (chunkIter.cells[x][y] != 0) {
-						if (containsCoord(new int[] {chunkIter.coord[COORD_X]+1, chunkIter.coord[COORD_Y]})) {
-							break;
-						} else {
-							loadChunk(new int[] {chunkIter.coord[COORD_X]+1, chunkIter.coord[COORD_Y]});
-							break;
-						}
-					}
-				}
-			}
-			
-			//up neighbor
-			for (int x = 0; x < chunkSize; x++) {
-				for (int y = 0; y < buffer; y++) {
-					if (chunkIter.cells[x][y] != 0) {
-						if (containsCoord(new int[] {chunkIter.coord[COORD_X], chunkIter.coord[COORD_Y]-1})) {
-							break;
-						} else {
-							loadChunk(new int[] {chunkIter.coord[COORD_X], chunkIter.coord[COORD_Y]-1});
-							break;
-						}
-					}
-				}
-			}
-			
-			//down neighbor
-			for (int x = 0; x < chunkSize; x++) {
-				for (int y = chunkSize-buffer; y < chunkSize; y++) {
-					if (chunkIter.cells[x][y] != 0) {
-						if (containsCoord(new int[] {chunkIter.coord[COORD_X], chunkIter.coord[COORD_Y]+1})) {
-							break;
-						} else {
-							loadChunk(new int[] {chunkIter.coord[COORD_X], chunkIter.coord[COORD_Y]+1});
-							break;
-						}
+	private static void generateChunkNeighbor(Chunk chunkIter, int xDir, int yDir) {
+		int buffer = 3;
+		
+		//border regions of the chunk
+		final int[] LEFT_NEIGHBOR_X = new int[] {0, buffer};
+		final int[] LEFT_NEIGHBOR_Y = new int[] {0, chunkSize};
+		final int[] UP_NEIGHBOR_X = new int[] {0, chunkSize};
+		final int[] UP_NEIGHBOR_Y = new int[] {0, buffer};
+		final int[] RIGHT_NEIGHBOR_X = new int[] {chunkSize-buffer, chunkSize};
+		final int[] RIGHT_NEIGHBOR_Y = new int[] {0, chunkSize};
+		final int[] DOWN_NEIGHBOR_X = new int[] {0, chunkSize};
+		final int[] DOWN_NEIGHBOR_Y = new int[] {chunkSize-buffer, chunkSize};
+		
+		switch(xDir) {
+			case LEFT: generateChunkNeighborHelper(chunkIter, xDir, yDir, LEFT_NEIGHBOR_X, LEFT_NEIGHBOR_Y); break;
+			case RIGHT: generateChunkNeighborHelper(chunkIter, xDir, yDir, RIGHT_NEIGHBOR_X, RIGHT_NEIGHBOR_Y); break;
+			default: break;
+		}
+		
+		switch(yDir) {
+			case UP: generateChunkNeighborHelper(chunkIter, xDir, yDir, UP_NEIGHBOR_X, UP_NEIGHBOR_Y); break;
+			case DOWN: generateChunkNeighborHelper(chunkIter, xDir, yDir, DOWN_NEIGHBOR_X, DOWN_NEIGHBOR_Y); break;
+			default: break;
+		}
+	}
+
+	private static void generateChunkNeighborHelper(Chunk chunkIter, int xDir, int yDir, int[] REGION_X,
+			int[] REGION_Y) {
+		final int START = 0, STOP = 1;
+		
+		for (int x = REGION_X[START]; x < REGION_X[STOP]; x++) {
+			for (int y = REGION_Y[START]; y < REGION_Y[STOP]; y++) {
+				if (chunkIter.cells[x][y] != 0) {
+					if (containsCoord(new int[] {chunkIter.coord[COORD_X]+xDir, chunkIter.coord[COORD_Y]+yDir})) {
+						break;
+					} else {
+						loadChunk(new int[] {chunkIter.coord[COORD_X]+xDir, chunkIter.coord[COORD_Y]+yDir});
+						break;
 					}
 				}
 			}
 		}
-		
 	}
 	
 	

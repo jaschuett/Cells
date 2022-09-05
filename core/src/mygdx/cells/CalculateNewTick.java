@@ -26,89 +26,102 @@ public class CalculateNewTick {
 	 * Calculates the number of live neighbors of each cell and updates next tick
 	 */
 	public static void calculate(Automaton ruleset) {
-		
+		ThreadGroup threadGroup = new ThreadGroup("chunks");
 		Iterator<Chunk> iter = Chunk.chunks.iterator();
 		while (iter.hasNext()) {
 			Chunk chunk = iter.next();
-			int[][] newTick = new int[Chunk.chunkSize][Chunk.chunkSize];
-			int newTickLiveCount = 0;
-			//for every cell in the chunk
-			for (int x = 0; x < Chunk.chunkSize; x++) {
-				for (int y = 0; y < Chunk.chunkSize; y++) {
-					int neighbors = 0;
-					
-					//check its neighbors, starting from top left, going clockwise
-					for (int n = 0; n < 8; n++) {
-						
-						if (x == 0 || x == Chunk.chunkSize-1 || y == 0 || y == Chunk.chunkSize-1) { //edge cases: cells on border
-							switch (n) {
-							case 0: 
-								neighbors += ruleHelper(chunk, x, y, LEFT, UP);
-								break;
-								
-							case 1:
-								neighbors += ruleHelper(chunk, x, y, XCENTER, UP);
-								break;
-								
-							case 2: 
-								neighbors += ruleHelper(chunk, x, y, RIGHT, UP);
-								break;
-							
-							case 3: 
-								neighbors += ruleHelper(chunk, x, y, RIGHT, YCENTER);
-								break;
-							
-							case 4: 
-								neighbors += ruleHelper(chunk, x, y, RIGHT, DOWN);
-								break;
-							
-							case 5: 
-								neighbors += ruleHelper(chunk, x, y, XCENTER, DOWN);
-								break;
-							
-							case 6: 
-								neighbors += ruleHelper(chunk, x, y, LEFT, DOWN);
-								break;
-							
-							case 7: 
-								neighbors += ruleHelper(chunk, x, y, LEFT, YCENTER);
-								break;
-								
-							} //end switch
-							
-							
-						} else { //within chunk
-							switch (n) {
-							case 0: if (chunk.cells[x+LEFT] [y+UP]   != 0) {neighbors++;} break;
-							case 1: if (chunk.cells[x]		[y+UP]   != 0) {neighbors++;} break;
-							case 2: if (chunk.cells[x+RIGHT][y+UP]   != 0) {neighbors++;} break;
-							case 3: if (chunk.cells[x+RIGHT][y]      != 0) {neighbors++;} break;
-							case 4: if (chunk.cells[x+RIGHT][y+DOWN] != 0) {neighbors++;} break;
-							case 5: if (chunk.cells[x]		[y+DOWN] != 0) {neighbors++;} break;
-							case 6: if (chunk.cells[x+LEFT] [y+DOWN] != 0) {neighbors++;} break;
-							case 7: if (chunk.cells[x+LEFT] [y]      != 0) {neighbors++;} break;
-							}
-						 }
-					}
-					int liveOrNot = ruleset.applyRule(neighbors, chunk.cells[x][y]);
-					newTick[x][y] = liveOrNot;
-					if (liveOrNot == 1) {newTickLiveCount++;}
-				}
-			}
 			
-			//update the chunk's cell buffer and live count
-			chunk.cellBuffer = newTick;
-			chunk.liveCount = newTickLiveCount;
+			Thread thread = new Thread(threadGroup, new Runnable() {
+				public void run() {
+					calculateChunk(ruleset, chunk);
+					
+				}
+			}); 
+			thread.run(); 
+		}
+		if (threadGroup.activeCount() == 0) {
+			//update every chunk at once
+			iter = Chunk.chunks.iterator();
+			while (iter.hasNext()) {
+				Chunk chunk = iter.next();
+				chunk.cells = chunk.cellBuffer;
+			}
+			Chunk.disposeChunks();
+			Chunk.generateChunks();
+		}
+	}
+
+	private static void calculateChunk(Automaton ruleset, Chunk chunk) {
+		int[][] newTick = new int[Chunk.chunkSize][Chunk.chunkSize];
+		int newTickLiveCount = 0;
+		//for every cell in the chunk
+		for (int x = 0; x < Chunk.chunkSize; x++) {
+			for (int y = 0; y < Chunk.chunkSize; y++) {
+				int neighbors = 0;
+				
+				//check its neighbors, starting from top left, going clockwise
+				for (int n = 0; n < 8; n++) {
+					
+					if (x == 0 || x == Chunk.chunkSize-1 || y == 0 || y == Chunk.chunkSize-1) { //edge cases: cells on border
+						switch (n) {
+						case 0: 
+							neighbors += ruleHelper(chunk, x, y, LEFT, UP);
+							break;
+							
+						case 1:
+							neighbors += ruleHelper(chunk, x, y, XCENTER, UP);
+							break;
+							
+						case 2: 
+							neighbors += ruleHelper(chunk, x, y, RIGHT, UP);
+							break;
+						
+						case 3: 
+							neighbors += ruleHelper(chunk, x, y, RIGHT, YCENTER);
+							break;
+						
+						case 4: 
+							neighbors += ruleHelper(chunk, x, y, RIGHT, DOWN);
+							break;
+						
+						case 5: 
+							neighbors += ruleHelper(chunk, x, y, XCENTER, DOWN);
+							break;
+						
+						case 6: 
+							neighbors += ruleHelper(chunk, x, y, LEFT, DOWN);
+							break;
+						
+						case 7: 
+							neighbors += ruleHelper(chunk, x, y, LEFT, YCENTER);
+							break;
+							
+						} //end switch
+						
+						
+					} else { //within chunk
+						switch (n) {
+						case 0: if (chunk.cells[x+LEFT] [y+UP]   != 0) {neighbors++;} break;
+						case 1: if (chunk.cells[x]		[y+UP]   != 0) {neighbors++;} break;
+						case 2: if (chunk.cells[x+RIGHT][y+UP]   != 0) {neighbors++;} break;
+						case 3: if (chunk.cells[x+RIGHT][y]      != 0) {neighbors++;} break;
+						case 4: if (chunk.cells[x+RIGHT][y+DOWN] != 0) {neighbors++;} break;
+						case 5: if (chunk.cells[x]		[y+DOWN] != 0) {neighbors++;} break;
+						case 6: if (chunk.cells[x+LEFT] [y+DOWN] != 0) {neighbors++;} break;
+						case 7: if (chunk.cells[x+LEFT] [y]      != 0) {neighbors++;} break;
+						}
+					 }
+				}
+				int liveOrNot = ruleset.applyRule(neighbors, chunk.cells[x][y]);
+				newTick[x][y] = liveOrNot;
+				if (liveOrNot == 1) {newTickLiveCount++;}
+			}
 		}
 		
-		//update every chunk at once
-		iter = Chunk.chunks.iterator();
-		while (iter.hasNext()) {
-			Chunk chunk = iter.next();
-			chunk.cells = chunk.cellBuffer.clone();
-		}
-		Chunk.disposeChunks();
-		Chunk.generateChunks();
+		//update the chunk's cell buffer and live count
+		chunk.cellBuffer = newTick;
+		chunk.liveCount = newTickLiveCount;
+		
 	}
 	
 	/** Checks the cell relative to the cell at [x, y] using given offset
