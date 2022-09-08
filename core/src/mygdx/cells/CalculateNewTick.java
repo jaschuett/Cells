@@ -1,6 +1,7 @@
 package mygdx.cells;
 
 import java.util.Iterator;
+import java.util.Optional;
 
 /**
  * Calculates the number of live cells in the 8 adjacent spots
@@ -19,7 +20,7 @@ public class CalculateNewTick {
 	/**
 	 * 1
 	 */
-	final static int RIGHT = 1, DOWN = 1, CELL_COORD = 1, COORD_Y = 1;
+	final static int RIGHT = 1, DOWN = 1, CELL_COORD = 1, COORD_Y = 1, CHUNK_CENTER = 1;
 	
 	
 	/**
@@ -60,58 +61,27 @@ public class CalculateNewTick {
 				int neighbors = 0;
 				
 				//check its neighbors, starting from top left, going clockwise
-				for (int n = 0; n < 8; n++) {
-					
-					if (x == 0 || x == Chunk.chunkSize-1 || y == 0 || y == Chunk.chunkSize-1) { //edge cases: cells on border
-						switch (n) {
-						case 0: 
-							neighbors += ruleHelper(chunk, x, y, LEFT, UP);
-							break;
-							
-						case 1:
-							neighbors += ruleHelper(chunk, x, y, XCENTER, UP);
-							break;
-							
-						case 2: 
-							neighbors += ruleHelper(chunk, x, y, RIGHT, UP);
-							break;
-						
-						case 3: 
-							neighbors += ruleHelper(chunk, x, y, RIGHT, YCENTER);
-							break;
-						
-						case 4: 
-							neighbors += ruleHelper(chunk, x, y, RIGHT, DOWN);
-							break;
-						
-						case 5: 
-							neighbors += ruleHelper(chunk, x, y, XCENTER, DOWN);
-							break;
-						
-						case 6: 
-							neighbors += ruleHelper(chunk, x, y, LEFT, DOWN);
-							break;
-						
-						case 7: 
-							neighbors += ruleHelper(chunk, x, y, LEFT, YCENTER);
-							break;
-							
-						} //end switch
-						
-						
-					} else { //within chunk
-						switch (n) {
-						case 0: if (chunk.cells[x+LEFT] [y+UP]   != 0) {neighbors++;} break;
-						case 1: if (chunk.cells[x]		[y+UP]   != 0) {neighbors++;} break;
-						case 2: if (chunk.cells[x+RIGHT][y+UP]   != 0) {neighbors++;} break;
-						case 3: if (chunk.cells[x+RIGHT][y]      != 0) {neighbors++;} break;
-						case 4: if (chunk.cells[x+RIGHT][y+DOWN] != 0) {neighbors++;} break;
-						case 5: if (chunk.cells[x]		[y+DOWN] != 0) {neighbors++;} break;
-						case 6: if (chunk.cells[x+LEFT] [y+DOWN] != 0) {neighbors++;} break;
-						case 7: if (chunk.cells[x+LEFT] [y]      != 0) {neighbors++;} break;
-						}
-					 }
+				if (x == 0 || x == Chunk.chunkSize-1 || y == 0 || y == Chunk.chunkSize-1) { //edge cases: cells on border
+					neighbors += ruleHelper(chunk, x, y, LEFT, UP);
+					neighbors += ruleHelper(chunk, x, y, XCENTER, UP);
+					neighbors += ruleHelper(chunk, x, y, RIGHT, UP);
+					neighbors += ruleHelper(chunk, x, y, RIGHT, YCENTER);
+					neighbors += ruleHelper(chunk, x, y, RIGHT, DOWN);
+					neighbors += ruleHelper(chunk, x, y, XCENTER, DOWN);
+					neighbors += ruleHelper(chunk, x, y, LEFT, DOWN);
+					neighbors += ruleHelper(chunk, x, y, LEFT, YCENTER);
+
+				} else { //within chunk
+					if (chunk.cells[x+LEFT] [y+UP]   != 0) {neighbors++;}
+					if (chunk.cells[x]		[y+UP]   != 0) {neighbors++;}
+					if (chunk.cells[x+RIGHT][y+UP]   != 0) {neighbors++;}
+					if (chunk.cells[x+RIGHT][y]      != 0) {neighbors++;}
+					if (chunk.cells[x+RIGHT][y+DOWN] != 0) {neighbors++;}
+					if (chunk.cells[x]		[y+DOWN] != 0) {neighbors++;}
+					if (chunk.cells[x+LEFT] [y+DOWN] != 0) {neighbors++;}
+					if (chunk.cells[x+LEFT] [y]      != 0) {neighbors++;}
 				}
+				
 				int liveOrNot = ruleset.applyRule(neighbors, chunk.cells[x][y]);
 				newTick[x][y] = liveOrNot;
 				if (liveOrNot == 1) {newTickLiveCount++;}
@@ -137,10 +107,14 @@ public class CalculateNewTick {
 		
 		//get the new chunk and cell coords we need
 		int[][] fixedCoords = fixCoords(new int[][] {chunk.coord, {x+xOffset, y+yOffset}}); 
-		Chunk fixedChunk = Chunk.getChunkAt(fixedCoords[CHUNK_COORD]);
+		int[] fixedChunkCoordsRel = new int[] {fixedCoords[CHUNK_COORD][COORD_X] - chunk.coord[COORD_X],
+											   fixedCoords[CHUNK_COORD][COORD_Y] - chunk.coord[COORD_Y]};
+				
+		Chunk fixedChunk = chunk.neighbors[CHUNK_CENTER+fixedChunkCoordsRel[COORD_X]][CHUNK_CENTER+fixedChunkCoordsRel[COORD_Y]];
 		
 		//break if coords are in an unloaded chunk
 		if (fixedChunk == null) return 0;
+		
 		
 		//check the cell at the coords
 		if (fixedChunk.cells[fixedCoords[CELL_COORD][COORD_X]][fixedCoords[CELL_COORD][COORD_Y]] != 0) {

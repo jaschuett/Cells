@@ -2,7 +2,9 @@ package mygdx.cells;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 //x+ is right, y+ is down
@@ -20,8 +22,9 @@ public class Chunk {
 	/**
 	 * 1
 	 */
-	final static int COORD_Y = 1, RIGHT = 1, DOWN = 1;
+	final static int COORD_Y = 1, RIGHT = 1, DOWN = 1, CHUNK_CENTER = 1;
 	
+	public Chunk[][] neighbors = new Chunk[3][3];
 	public static ArrayList<Chunk> chunks = new ArrayList<Chunk>();
 	final public static int chunkSize = 50;
 	public int[][] cells;
@@ -45,13 +48,72 @@ public class Chunk {
 	
 	/**
 	 * create new chunk and add it to the list
-	 * @param coord the coodinate of the chunk in chunk coordinates
+	 * @param coord the coordinate of the chunk in chunk coordinates
 	 */
 	public Chunk(int[] coord) {
 		cells = new int[chunkSize][chunkSize];
 		this.coord = coord;
 		chunks.add(this);
 		allCoords.add(coord);
+		neighbors[CHUNK_CENTER][CHUNK_CENTER] = this;
+		addAllNeighbors();
+		updateAllNeighbors();
+	}
+	
+	private void addAllNeighbors() {
+		//the chunk's 8 neighbors, clockwise
+		addNeighbor(LEFT, UP);
+		addNeighbor(XCENTER, UP);
+		addNeighbor(RIGHT, UP);
+		addNeighbor(RIGHT, YCENTER);
+		addNeighbor(RIGHT, DOWN);
+		addNeighbor(XCENTER, DOWN);
+		addNeighbor(LEFT, DOWN);
+		addNeighbor(LEFT, YCENTER);
+	}
+	
+	private void updateAllNeighbors() {
+		//the chunk's 8 neighbors, clockwise
+		updateNeighbor(LEFT, UP);
+		updateNeighbor(XCENTER, UP);
+		updateNeighbor(RIGHT, UP);
+		updateNeighbor(RIGHT, YCENTER);
+		updateNeighbor(RIGHT, DOWN);
+		updateNeighbor(XCENTER, DOWN);
+		updateNeighbor(LEFT, DOWN);
+		updateNeighbor(LEFT, YCENTER);
+	}
+	
+	/**
+	 * Evaluate the existence of the neighbor chunk, add it or null to neighbors array
+	 * @param coord coord of the chunk whose neighbor to check
+	 * @param xDir x direction of neighbor
+	 * @param yDir y direction of neighbor
+	 */
+	private void addNeighbor(int xDir, int yDir) {
+		neighbors[CHUNK_CENTER+xDir][CHUNK_CENTER+yDir] = getChunkAt(new int[] {coord[COORD_X]+xDir, coord[COORD_Y]+yDir});
+	}
+	
+	/**
+	 * Updates the neighbor field of the chunk at coord[coord[x]+xDir][coord[y]+yDir]
+	 * @param xDir x offset of neighbor
+	 * @param yDir y offset of neighbor
+	 */
+	private void updateNeighbor(int xDir, int yDir) {
+		Chunk neighborChunk = neighbors[CHUNK_CENTER+xDir][CHUNK_CENTER+yDir];
+		if (neighborChunk == null) return;
+		neighborChunk.neighbors[CHUNK_CENTER-xDir][CHUNK_CENTER-yDir] = this;
+	}
+	
+	/**
+	 * Gets the neighbor of a chunk. Can only be up/down/left/right, no corners
+	 * @param chunk
+	 * @param xOffset LEFT, RIGHT or XCENTER
+	 * @param yOffset UP, DOWN or YCENTER
+	 * @return the neighbor. Can be null
+	 */
+	public Chunk getChunkRel(int xOffset, int yOffset) {
+		return neighbors[CHUNK_CENTER+xOffset][CHUNK_CENTER+yOffset];
 	}
 	
 	/**
