@@ -236,10 +236,11 @@ public class GameScreen implements Screen {
 		
 		//speed selection
 		final SelectBox<String> speedSelect = new SelectBox<String>(skin);
-		speedSelect.setItems("5", "10", "15", "30", "60", "120", "Unlimited");
+		speedSelect.setItems("1", "5", "10", "15", "30", "60", "120", "Unlimited");
 		speedSelect.setSelectedIndex(3);
 		speedSelect.addListener((e) -> {
 			switch(speedSelect.getSelected()) {
+				case "1": simFps = 1; break;
 				case "5": simFps = 5; break;
 				case "10": simFps = 10; break;
 				case "15": simFps = 15; break;
