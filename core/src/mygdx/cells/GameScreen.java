@@ -57,7 +57,6 @@ public class GameScreen implements Screen {
 	Automaton ruleset = new Automaton(birth, survive);
 	
 	public GameScreen(final Cells game) {
-		//boilerplate
 		this.game = game;
 		camera = new OrthographicCamera();
 		viewport = new ExtendViewport(1280, 720, camera);
@@ -434,8 +433,8 @@ public class GameScreen implements Screen {
 
 	@Override
 	public void resize(int width, int height) {
-		// TODO Auto-generated method stub
-		
+		viewport = new ExtendViewport(width, height, camera);
+		camera.setToOrtho(false, width, height);
 	}
 
 	@Override
