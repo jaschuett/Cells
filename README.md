@@ -2,9 +2,6 @@
 Cellular automaton tool implemented with [libGDX](https://libgdx.com/).
 (Gifs may take some time to load)
 
-![image](https://user-images.githubusercontent.com/47903664/190571113-ba8f2fbe-f4e8-43eb-9eb7-730b29e784e9.png)
-
-
 # Options
 Color: color of live cells. <br><br>
 Ticks/sec: the maximum game ticks calculated per second. <br><br>
