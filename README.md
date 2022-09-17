@@ -25,9 +25,3 @@ Every pattern is replaced by copies of itself.
 ## Anneal (B4678/S35678)
 Approximates the curve-shortening flow on the boundaries between live and dead cells.
 ![anneal](https://user-images.githubusercontent.com/47903664/190590660-d6d2247e-0c13-44a6-831d-d19787f9fada.gif)
-
-
-# Mechanics
-## Chunks
-This implementation does not have a statically sized grid. Instead, it has an infinite plane. To do this, it uses chunks, similar to Minecraft. 
-When a live cell is detected in the border region of a chunk, the adjacent chunk is created. When a chunk has no live cells, it is deleted.
