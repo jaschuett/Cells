@@ -1,0 +1,1 @@
+typeSearchIndex = [{"l":"All Classes","u":"allclasses-index.html"},{"p":"mygdx.cells","l":"CalculateNewTick"},{"p":"com.mygdx.game","l":"DesktopLauncher"}];updateSearchResults();
