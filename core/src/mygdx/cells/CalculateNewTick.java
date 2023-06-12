@@ -47,7 +47,11 @@ public class CalculateNewTick {
 				Chunk chunk = iter.next();
 				chunk.cells = chunk.cellBuffer;
 			}
-			Chunk.disposeChunks();
+			
+			if (Chunk.chunksToRemove.size() > 10) {
+				Chunk.disposeChunks();
+			}
+			
 			Chunk.generateChunks();
 		}
 	}
@@ -91,7 +95,9 @@ public class CalculateNewTick {
 		//update the chunk's cell buffer and live count
 		chunk.cellBuffer = newTick;
 		chunk.liveCount = newTickLiveCount;
-		
+		if (newTickLiveCount == 0) {
+			Chunk.chunksToRemove.add(chunk);
+		}
 	}
 	
 	/** Checks the cell relative to the cell at [x, y] using given offset

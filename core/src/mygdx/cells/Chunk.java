@@ -24,6 +24,7 @@ public class Chunk {
 	
 	public Chunk[][] neighbors = new Chunk[3][3];
 	public static ArrayList<Chunk> chunks = new ArrayList<Chunk>();
+	public static ArrayList<Chunk> chunksToRemove = new ArrayList<Chunk>();
 	final public static int chunkSize = 50;
 	public int[][] cells;
 	public int[][] cellBuffer;
@@ -181,25 +182,14 @@ public class Chunk {
 	 * Remove empty chunks
 	 */
 	public static void disposeChunks() {
-		Iterator<Chunk> chunkIterator = Chunk.chunks.iterator();
+		Iterator<Chunk> chunkIterator = Chunk.chunksToRemove.iterator();
 		while (chunkIterator.hasNext()) {
 			
 			Chunk chunkIter = chunkIterator.next();
-			
-			//if chunk is empty
-			if (chunkIter.liveCount == 0) {
-				chunkIterator.remove();
-			}
-			
-			//update coords list
-			allCoords = new ArrayList<int[]>();
-			
-			Iterator<Chunk> iter = chunks.iterator();
-			
-			while (iter.hasNext()) {
-				allCoords.add(iter.next().coord);
-			}
+			chunks.remove(chunkIter);
+			allCoords.remove(chunkIter.coord);
 		} 
+		chunksToRemove = new ArrayList<Chunk>();
 	}
 	
 	/**
