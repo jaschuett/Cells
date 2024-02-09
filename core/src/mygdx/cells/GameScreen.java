@@ -11,9 +11,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
-import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.SelectBox;
@@ -23,7 +21,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.badlogic.gdx.utils.viewport.FillViewport;
 import com.badlogic.gdx.math.MathUtils;
 
 public class GameScreen implements Screen {
@@ -31,7 +29,7 @@ public class GameScreen implements Screen {
 	float timeSinceSim = 0;
 	final Cells game;
 	OrthographicCamera camera;
-	ExtendViewport viewport;
+	FillViewport viewport;
 	int cellSize = 50;
 	boolean run = false;
 	boolean showGrid = true;
@@ -43,9 +41,7 @@ public class GameScreen implements Screen {
 	Stage stage=new Stage();
 	Skin skin=new Skin(Gdx.files.internal("ui/uiskin.json"));
 	Table table;
-	Table rulesDialog;
-	boolean dialogUp = false;
-	
+	Table rulesDialog;	
 	/**
 	 * Bit flags to represent the game rules. Index represents
 	 * number of neighbors from 0-8, value indicates whether the
@@ -59,12 +55,12 @@ public class GameScreen implements Screen {
 	public GameScreen(final Cells game) {
 		this.game = game;
 		camera = new OrthographicCamera();
-		viewport = new ExtendViewport(1280, 720, camera);
+		viewport = new FillViewport(1280, 720, camera);
 		camera.setToOrtho(false, 1280, 720);
 
-		//create top settings bar
 		createMenuBar(skin);
-		
+		createRulesDialog(skin);
+
 		//input processor for the grid
 		InputAdapter cellsInput = new InputAdapter() {
 			@Override
@@ -124,7 +120,8 @@ public class GameScreen implements Screen {
 				
 				//edit rules
 				if (keycode == Input.Keys.E) {
-					createRulesDialog(skin);
+					rulesDialog.setVisible(!rulesDialog.isVisible());
+					//createRulesDialog(skin);
 				}
 				
 				return true;
@@ -136,14 +133,6 @@ public class GameScreen implements Screen {
 	}
 	
 	private void createRulesDialog(Skin skin) {
-		if (dialogUp) {
-			rulesDialog.remove();
-			dialogUp = false;
-			return;
-		}
-		
-		dialogUp = true;
-		
 		//dialog window
 		rulesDialog = new Table(skin);
 		rulesDialog.setSize(250, 350);
@@ -229,6 +218,7 @@ public class GameScreen implements Screen {
 			});
 		Label colorLabel = new Label("Color", skin);
 		VerticalGroup colorGp = new VerticalGroup();
+		
 		colorGp.addActor(colorLabel);
 		colorGp.addActor(colorSelect);
 		colorGp.pad(padding);
@@ -303,10 +293,8 @@ public class GameScreen implements Screen {
 		//finish table
 		table.setPosition(0,Gdx.graphics.getHeight()-colorGp.getPrefHeight());
 		table.setBackground(skin.getDrawable("blue"));
-		
 		table.left();
 		table.setSize(Gdx.graphics.getWidth(), colorGp.getPrefHeight());
-		//table.debug();
 		stage.addActor(table);
 	}
 
@@ -316,12 +304,13 @@ public class GameScreen implements Screen {
 	 */
 	@Override
 	public void render(float delta) {
-		
 		//pan camera
 		if (Gdx.input.isTouched()) {
+			
 			camera.translate(-Gdx.input.getDeltaX() * camera.zoom, Gdx.input.getDeltaY() * camera.zoom, 0);
 			camera.update();
 		}
+
 		ScreenUtils.clear(bgColor);
 		
 		camera.update();
@@ -434,7 +423,8 @@ public class GameScreen implements Screen {
 
 	@Override
 	public void resize(int width, int height) {
-		viewport = new ExtendViewport(width, height, camera);
+		viewport = new FillViewport(width, height, camera);
+		stage.getViewport().update(width, height);
 		camera.setToOrtho(false, width, height);
 	}
 
