@@ -21,9 +21,11 @@ import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.StringBuilder;
 import com.badlogic.gdx.utils.viewport.FillViewport;
 import com.badlogic.gdx.math.MathUtils;
-
+import com.aparapi.*;
+import com.aparapi.internal.kernel.KernelManager;
 public class GameScreen implements Screen {
 	float simFps = 15;
 	float timeSinceSim = 0;
@@ -41,7 +43,8 @@ public class GameScreen implements Screen {
 	Stage stage=new Stage();
 	Skin skin=new Skin(Gdx.files.internal("ui/uiskin.json"));
 	Table table;
-	Table rulesDialog;	
+	Table rulesDialog;
+	CellsKernel cKernel = new CellsKernel();
 	/**
 	 * Bit flags to represent the game rules. Index represents
 	 * number of neighbors from 0-8, value indicates whether the
@@ -57,9 +60,13 @@ public class GameScreen implements Screen {
 		camera = new OrthographicCamera();
 		viewport = new FillViewport(1280, 720, camera);
 		camera.setToOrtho(false, 1280, 720);
-
 		createMenuBar(skin);
 		createRulesDialog(skin);
+		cKernel.execute(Chunk.chunkSize, Chunk.chunkSize);
+		
+		java.lang.StringBuilder strBld = new java.lang.StringBuilder();
+		KernelManager.instance().reportDeviceUsage(strBld, true);
+		System.out.println(strBld);
 
 		//input processor for the grid
 		InputAdapter cellsInput = new InputAdapter() {

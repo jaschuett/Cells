@@ -1,8 +1,8 @@
 package mygdx.cells;
 
 import java.util.Iterator;
-import java.util.Optional;
-
+import com.aparapi.*;
+import com.aparapi.Kernel;
 /**
  * Calculates the number of live cells in the 8 adjacent spots
  */
@@ -27,6 +27,7 @@ public class CalculateNewTick {
 	 * Calculates the number of live neighbors of each cell and updates next tick
 	 */
 	public static void calculate(Automaton ruleset) {
+		
 		ThreadGroup threadGroup = new ThreadGroup("chunks");
 		Iterator<Chunk> iter = Chunk.chunks.iterator();
 		while (iter.hasNext()) {
@@ -35,7 +36,6 @@ public class CalculateNewTick {
 			Thread thread = new Thread(threadGroup, new Runnable() {
 				public void run() {
 					calculateChunk(ruleset, chunk);
-					
 				}
 			}); 
 			thread.run(); 
@@ -50,11 +50,16 @@ public class CalculateNewTick {
 			Chunk.disposeChunks();
 			Chunk.generateChunks();
 		}
+
+		
 	}
 
+	
+	
 	private static void calculateChunk(Automaton ruleset, Chunk chunk) {
 		int[][] newTick = new int[Chunk.chunkSize][Chunk.chunkSize];
 		int newTickLiveCount = 0;
+		
 		//for every cell in the chunk
 		for (int x = 0; x < Chunk.chunkSize; x++) {
 			for (int y = 0; y < Chunk.chunkSize; y++) {
@@ -93,6 +98,10 @@ public class CalculateNewTick {
 		chunk.liveCount = newTickLiveCount;
 		
 	}
+
+
+		
+	
 	
 	/** Checks the cell relative to the cell at [x, y] using given offset
 	 * @param chunk 
